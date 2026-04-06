@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LGBTcoin Cloud Terminal</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { 
+            --bg: #0b0e11; 
+            --card: #1e2329; 
+            --primary: #fcd535; 
+            --text: #eaecef; 
+            --muted: #848e9c; 
+            --green: #0ecb81; 
+            --red: #f6465d; 
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            user-select: none;
+        }
+
+        /* LOGIN SCREEN - LGBT FLAG BG */
+        #login-screen { 
+            position: fixed; inset: 0; 
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Gay_Pride_Flag.svg/1280px-Gay_Pride_Flag.svg.png') center/cover;
+            display: flex; align-items: center; justify-content: center; 
+            z-index: 10000; backdrop-filter: blur(10px);
+        }
+
+        .login-box { 
+            background: rgba(30, 35, 41, 0.98); 
+            padding: 35px; border-radius: 25px; 
+            width: 85%; max-width: 380px; 
+            text-align: center; border: 1px solid #444; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        input { 
+            width: 100%; padding: 14px; margin: 10px 0; 
+            border-radius: 12px; border: 1px solid #444; 
+            background: #2b3139; color: white; 
+            box-sizing: border-box; font-size: 16px; 
+        }
+
+        .btn-gold { 
+            width: 100%; padding: 16px; 
+            background: var(--primary); color: #000; 
+            border: none; border-radius: 12px; 
+            font-weight: 900; font-size: 16px; 
+            cursor: pointer; margin-top: 10px; 
+        }
+
+        /* MAIN APP */
+        #app-screen { display: none; padding-bottom: 90px; }
+        
+        .header { 
+            padding: 15px 20px; background: var(--card); 
+            display: flex; justify-content: space-between; 
+            align-items: center; border-bottom: 1px solid #333; 
+            position: sticky; top: 0; z-index: 100; 
+        }
+
+        .view { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .card { 
+            background: var(--card); border-radius: 20px; 
+            padding: 20px; margin-bottom: 15px; 
+            border: 1px solid #2d333a; 
+        }
+
+        .balance-val { 
+            font-size: 2.8rem; font-weight: 800; 
+            color: var(--primary); text-align: center; 
+            margin: 10px 0; 
+        }
+
+        /* NAVIGATION BAR - 5 ICONS */
+        .nav { 
+            position: fixed; bottom: 0; width: 100%; 
+            background: var(--card); display: flex; 
+            justify-content: space-around; padding: 12px 0; 
+            border-top: 1px solid #333; z-index: 1000; 
+        }
+
+        .nav-item { color: var(--muted); text-align: center; cursor: pointer; flex: 1; }
+        .nav-item i { font-size: 20px; }
+        .nav-item span { display: block; font-size: 10px; margin-top: 4px; font-weight: bold; }
+        .nav-item.active { color: var(--primary); }
+
+        /* MINING BUTTON */
+        .mine-btn { 
+            background: linear-gradient(45deg, #fcd535, #ff9900); 
+            color: #000; width: 100%; padding: 25px; 
+            border-radius: 15px; font-size: 22px; 
+            font-weight: 900; border: none; cursor: pointer; 
+            box-shadow: 0 5px 15px rgba(252, 213, 53, 0.2);
+        }
+        .mine-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+        /* SHOP ITEMS */
+        .shop-row { 
+            display: flex; justify-content: space-between; 
+            align-items: center; background: #2b3139; 
+            padding: 15px; border-radius: 12px; 
+            margin-bottom: 10px; border-left: 4px solid var(--primary); 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h1 style="color: var(--primary); margin: 0;">LGBTcoin</h1>
+            <p style="color: var(--muted); margin-bottom: 20px;">Cloud Mining Network</p>
+            <input type="text" id="reg-name" placeholder="Твоето Име">
+            <input type="tel" id="reg-phone" placeholder="Телефонен номер">
+            <input type="password" id="reg-pass" placeholder="Парола">
+            <button class="btn-gold" onclick="handleAuth()">ВЛЕЗ В ТЕРМИНАЛА</button>
+            <p id="auth-err" style="color: var(--red); font-size: 12px; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div id="app-screen">
+        <div class="header">
+            <div style="font-weight: 900; color: var(--primary);">LGBTCOIN</div>
+            <div id="price-tag" style="background:#000; padding:5px 10px; border-radius:8px; font-weight:bold; color:var(--green);">0.20€</div>
+        </div>
+
+        <div id="v-profile" class="view">
+            <div class="card">
+                <h3>Твоят Профил</h3>
+                <p>Име: <b id="u-name">...</b></p>
+                <p>Поканени: <b id="u-refs">0</b> / 10</p>
+                <hr style="border: 0.5px solid #333;">
+                <p>Твоят линк за покана:</p>
+                <div style="background:#000; padding:12px; border-radius:8px; font-size:10px; color:var(--primary); word-break:break-all;" id="ref-link">...</div>
+                <p style="font-size: 11px; color: var(--muted); margin-top: 10px;">*При 10 поканени получаваш бонус скорост 10 GH/s!</p>
+            </div>
+        </div>
+
+        <div id="v-shop" class="view">
+            <h3>Магазин за Скорост</h3>
+            <div class="shop-row"><div>10 GH/s<br><small>1.99€</small></div><button class="btn-gold" style="width:auto; padding:8px 15px;" onclick="buy('1.99€')">КУПИ</button></div>
+            <div class="shop-row"><div>50 GH/s<br><small>3.99€</small></div><button class="btn-gold" style="width:auto; padding:8px 15px;" onclick="buy('3.99€')">КУПИ</button></div>
+            <div class="shop-row"><div>100 GH/s<br><small>5.99€</small></div><button class="btn-gold" style="width:auto; padding:8px 15px;" onclick="buy('5.99€')">КУПИ</button></div>
+            <div class="shop-row"><div>300 GH/s<br><small>10.99€</small></div><button class="btn-gold" style="width:auto; padding:8px 15px;" onclick="buy('10.99€')">КУПИ</button></div>
+        </div>
+
+        <div id="v-mining" class="view active">
+            <div class="card">
+                <p style="text-align: center; color: var(--muted);">Баланс (LGBT монети)</p>
+                <div class="balance-val" id="ui-bal">0.0000</div>
+                <p style="text-align: center;">Текуща скорост: <b id="ui-speed">3</b> GH/s</p>
+            </div>
+            <button id="mine-btn" class="mine-btn" onclick="startMining()">START MINING</button>
+            <p id="timer" style="text-align: center; margin-top: 15px; font-weight: bold; color: var(--primary);"></p>
+        </div>
+
+        <div id="v-chart" class="view">
+            <div class="card">
+                <h3>Пазар (LGBT / EUR)</h3>
+                <canvas id="coinChart"></canvas>
+            </div>
+        </div>
+
+        <div id="v-wallet" class="view">
+            <div class="card">
+                <h3>Твоят Портфейл</h3>
+                <p>Налично: <b id="w-bal">0.00</b> LGBT</p>
+                <input type="text" id="target-id" placeholder="ID на получател">
+                <input type="number" id="send-amt" placeholder="Количество">
+                <button class="btn-gold" onclick="send()">ИЗПРАТИ СЕГА</button>
+                <p style="font-size: 11px; color: var(--muted); margin-top: 15px;">
+                    Мин. за теглене: 100 LGBT<br>
+                    Мин. за изпращане: 50 LGBT
+                </p>
+            </div>
+        </div>
+
+        <nav class="nav">
+            <div class="nav-item" onclick="tab('v-profile', this)"><i class="fa-solid fa-user"></i><span>Профил</span></div>
+            <div class="nav-item" onclick="tab('v-shop', this)"><i class="fa-solid fa-shopping-cart"></i><span>Магазин</span></div>
+            <div class="nav-item active" onclick="tab('v-mining', this)"><i class="fa-solid fa-hammer"></i><span>Mining</span></div>
+            <div class="nav-item" onclick="tab('v-chart', this)"><i class="fa-solid fa-chart-line"></i><span>Графика</span></div>
+            <div class="nav-item" onclick="tab('v-wallet', this)"><i class="fa-solid fa-wallet"></i><span>Wallet</span></div>
+        </nav>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyWBO3dyT8-rQ3asHwkS81IVPitL_1kWI",
+            authDomain: "lgbtcoin-6697e.firebaseapp.com",
+            databaseURL: "https://lgbtcoin-6697e-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "lgbtcoin-6697e",
+            storageBucket: "lgbtcoin-6697e.firebasestorage.app",
+            messagingSenderId: "99410798830",
+            appId: "1:99410798830:web:4475120a29ab2370f1abff"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let user = null;
+        let chart = null;
+
+        // Вход и Регистрация
+        window.handleAuth = async () => {
+            const name = document.getElementById('reg-name').value;
+            const phone = document.getElementById('reg-phone').value;
+            const pass = document.getElementById('reg-pass').value;
+            const email = phone + "@lgbt.net";
+
+            try {
+                const res = await signInWithEmailAndPassword(auth, email, pass);
+                startApp(res.user.uid);
+            } catch (e) {
+                if(!name) { document.getElementById('auth-err').innerText = "Въведете име за регистрация!"; return; }
+                const res = await createUserWithEmailAndPassword(auth, email, pass);
+                const uid = res.user.uid;
+                await set(ref(db, 'users/' + uid), {
+                    name, phone, balance: 0, speed: 3, refs: 0, 
+                    miningUntil: 0, accId: "ID" + Math.floor(1000 + Math.random()*9000)
+                });
+                startApp(uid);
+            }
+        };
+
+        // Инициализация на приложението
+        async function startApp(uid) {
+            onValue(ref(db, 'users/' + uid), (snap) => {
+                user = snap.val(); user.uid = uid;
+                
+                // Проверка за бонус рефери
+                if(user.refs >= 10 && user.speed < 10) update(ref(db, 'users/' + uid), { speed: 10 });
+                
+                updateUI();
+            });
+
+            // Динамична цена от базата данни
+            onValue(ref(db, 'market/price'), (snap) => {
+                const p = snap.val() || 0.20;
+                document.getElementById('price-tag').innerText = p.toFixed(2) + "€";
+                if(chart) {
+                    chart.data.datasets[0].data.push(p);
+                    chart.data.datasets[0].data.shift();
+                    chart.update();
+                }
+            });
+
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            initChart();
+        }
+
+        function updateUI() {
+            document.getElementById('ui-bal').innerText = user.balance.toFixed(4);
+            document.getElementById('w-bal').innerText = user.balance.toFixed(2);
+            document.getElementById('u-name').innerText = user.name;
+            document.getElementById('u-refs').innerText = user.refs;
+            document.getElementById('ui-speed').innerText = user.speed;
+            document.getElementById('ref-link').innerText = "https://lgbtcoin.net/invite/" + user.accId;
+
+            const now = Date.now();
+            const btn = document.getElementById('mine-btn');
+            if(user.miningUntil > now) {
+                btn.disabled = true; btn.innerText = "MINING...";
+                runTimer(user.miningUntil);
+            } else {
+                btn.disabled = false; btn.innerText = "START MINING";
+            }
+        }
+
+        window.startMining = async () => {
+            const until = Date.now() + (24 * 60 * 60 * 1000);
+            await update(ref(db, 'users/' + user.uid), { 
+                miningUntil: until, 
+                balance: user.balance + user.speed 
+            });
+        };
+
+        function runTimer(until) {
+            const intv = setInterval(() => {
+                const diff = until - Date.now();
+                if(diff <= 0) { clearInterval(intv); updateUI(); return; }
+                const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+                document.getElementById('timer').innerText = `Остават: ${h}ч ${m}м ${s}с`;
+            }, 1000);
+        }
+
+        window.buy = (price) => {
+            alert(`За покупка прати TON на:\n\nUQCuIUIrH59P3BhCYSXiQEp8abCk3Hx83M1JH95wrdhh-Z4C\n\nКоментар: ${user.accId}`);
+        };
+
+        window.send = async () => {
+            const amt = parseFloat(document.getElementById('send-amt').value);
+            if(amt < 50) return alert("Минимум 50 LGBT!");
+            if(user.balance < amt) return alert("Нямате баланс!");
+            await update(ref(db, 'users/' + user.uid), { balance: user.balance - amt });
+            alert("Изпратено!");
+        };
+
+        window.tab = (id, el) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+        };
+
+        function initChart() {
+            const ctx = document.getElementById('coinChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: ['-5h','-4h','-3h','-2h','-1h','NOW'], datasets: [{ data:[0.18,0.22,0.19,0.21,0.20,0.20], borderColor:'#fcd535', tension:0.4 }] },
+                options: { responsive:true, plugins:{legend:{display:false}} }
+            });
+        }
+    </script>
+</body>
+</html>
