@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crypto Mining Game</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* --- ДИЗАЙН (ТЪМНА ТЕМА И ФОН) --- */
+        :root {
+            --bg-color: #050505;
+            --panel-bg: #111111;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --accent: #9d4edd;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Размазан LGBT фон за първа страница */
+        #login-screen {
+            position: fixed; width: 100%; height: 100%; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .lgbt-blur {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, red, orange, yellow, green, blue, purple);
+            filter: blur(90px); opacity: 0.3; z-index: -1;
+        }
+        .login-box {
+            background: rgba(10, 10, 10, 0.85); padding: 30px; border-radius: 15px;
+            text-align: center; width: 85%; max-width: 350px; border: 1px solid #333;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        /* Полета и Бутони */
+        input {
+            width: 90%; padding: 14px; margin: 10px 0; border-radius: 8px;
+            border: 1px solid #333; background: #000; color: #fff; font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 90%; padding: 14px; margin: 10px 0; border-radius: 8px;
+            border: none; background: var(--accent); color: white; font-size: 16px;
+            font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        button:active { transform: scale(0.96); }
+
+        /* Основно съдържание */
+        main { padding: 20px; height: calc(100vh - 80px); overflow-y: auto; display: none; }
+        .screen { display: none; animation: fadeIn 0.3s; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2 { text-align: center; border-bottom: 1px solid #222; padding-bottom: 10px; margin-top: 0; }
+        .card { background: var(--panel-bg); padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #222; }
+
+        /* --- КОПАЕНЕ (ПРАВОЪГЪЛЕН БУТОН) --- */
+        .mining-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 75vh; text-align: center; }
+        .balance-display { font-size: 36px; font-weight: 900; margin-bottom: 5px; letter-spacing: 1px; }
+        .price-display { color: var(--text-muted); font-size: 18px; margin-bottom: 40px; }
+        
+        #mine-btn {
+            width: 80%; height: 80px; border-radius: 12px; /* Правоъгълен бутон */
+            background: linear-gradient(145deg, #222, #0a0a0a);
+            border: 2px solid var(--accent); box-shadow: 0 0 15px rgba(157, 78, 221, 0.3);
+            font-size: 26px; letter-spacing: 3px; text-transform: uppercase;
+        }
+        #mine-btn.active-mining {
+            border-color: #00ff00; box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            background: linear-gradient(145deg, #0a1a0a, #000);
+        }
+        .speed-text { font-size: 18px; margin-top: 30px; color: #ccc; }
+
+        /* Навигация (5 Икони) */
+        nav {
+            position: fixed; bottom: 0; width: 100%; height: 70px;
+            background: #080808; display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid #222; z-index: 50; display: none;
+        }
+        .nav-item { font-size: 24px; padding: 10px; background: none; border: none; width: auto; color: #555; transition: 0.3s; }
+        .nav-item.active { color: var(--accent); transform: translateY(-3px); text-shadow: 0 0 10px rgba(157, 78, 221, 0.5); }
+        
+        #recaptcha-container { margin-top: 10px; display: flex; justify-content: center; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="lgbt-blur"></div>
+        <div class="login-box">
+            <h1 style="margin-top: 0;">Login</h1>
+            <input type="text" id="reg-name" placeholder="Full Name">
+            
+            <input type="password" id="reg-pass" placeholder="Password"> 
+            
+            <input type="tel" id="reg-phone" placeholder="Phone (e.g. +359...)">
+            <div id="recaptcha-container"></div>
+            <button id="btn-send-sms">Enter</button>
+
+            <div id="otp-section" style="display:none;">
+                <input type="text" id="reg-otp" placeholder="SMS Code">
+                <button id="btn-verify-otp">Verify</button>
+            </div>
+        </div>
+    </div>
+
+    <main id="main-app">
+        
+        <div id="tab-profile" class="screen">
+            <h2>Your Profile</h2>
+            <div class="card">
+                <p><strong>Name:</strong> <span id="ui-name">...</span></p>
+                <p><strong>ID:</strong> <span id="ui-id" style="font-size: 11px; color: #666;">...</span></p>
+            </div>
+            <div class="card">
+                <h3>Invite & Earn</h3>
+                <p style="font-size: 14px; color: #aaa;">Invite 10 people for +10 GH/s speed!</p>
+                <input type="text" id="invite-link" readonly>
+                <button onclick="copyLink()" style="background: #333;">Copy Link</button>
+                <p><strong>Total Invited:</strong> <span id="ui-refs">0</span> / 10</p>
+            </div>
+        </div>
+
+        <div id="tab-shop" class="screen">
+            <h2>Hashrate Shop</h2>
+            <div class="card" style="text-align: center;">
+                <h3 style="margin: 5px 0;">10 GH/s</h3>
+                <p style="color: #aaa; margin: 5px 0;">0.99€</p>
+                <button onclick="buyHash('0.99', '10')">Buy</button>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3 style="margin: 5px 0;">50 GH/s</h3>
+                <p style="color: #aaa; margin: 5px 0;">1.99€</p>
+                <button onclick="buyHash('1.99', '50')">Buy</button>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3 style="margin: 5px 0;">100 GH/s</h3>
+                <p style="color: #aaa; margin: 5px 0;">5.99€</p>
+                <button onclick="buyHash('5.99', '100')">Buy</button>
+            </div>
+        </div>
+
+        <div id="tab-mining" class="screen active">
+            <div class="mining-container">
+                <div class="balance-display"><span id="ui-balance">0.000000</span></div>
+                <div class="price-display">≈ $<span id="ui-fiat">0.00</span></div>
+                
+                <button id="mine-btn">MINING</button>
+                
+                <p class="speed-text">Current Speed: <span id="ui-speed" style="color: #fff; font-weight: bold;">5</span> GH/s</p>
+                <p id="mining-status" style="color: var(--accent); font-size: 14px; margin-top: 5px;"></p>
+            </div>
+        </div>
+
+        <div id="tab-chart" class="screen">
+            <h2>Market</h2>
+            <div class="card">
+                <p>Live Price: <strong>$<span id="chart-price">0.00</span></strong></p>
+                <canvas id="marketChart" width="400" height="250"></canvas>
+            </div>
+        </div>
+
+        <div id="tab-wallet" class="screen">
+            <h2>Wallet</h2>
+            <div class="card">
+                <h3>Withdraw</h3>
+                <p style="font-size:12px; color:#aaa;">Min: 100 Coins | Fee: 1 Coin</p>
+                <input type="text" id="withdraw-addr" placeholder="Your External Wallet Address">
+                <input type="number" id="withdraw-amount" placeholder="Amount">
+                <button onclick="withdraw()">Withdraw</button>
+            </div>
+            <div class="card">
+                <h3>Send to Friend</h3>
+                <p style="font-size:12px; color:#aaa;">Min: 50 Coins | Instant Transfer</p>
+                <input type="text" id="transfer-id" placeholder="Friend's User ID">
+                <input type="number" id="transfer-amount" placeholder="Amount">
+                <button onclick="transfer()">Send</button>
+            </div>
+        </div>
+
+    </main>
+
+    <nav id="bottom-nav">
+        <button class="nav-item" onclick="switchTab('tab-profile', this)">👤</button>
+        <button class="nav-item" onclick="switchTab('tab-shop', this)">🛒</button>
+        <button class="nav-item active" style="color: var(--accent);" onclick="switchTab('tab-mining', this)">⛏️</button>
+        <button class="nav-item" onclick="switchTab('tab-chart', this)">📈</button>
+        <button class="nav-item" onclick="switchTab('tab-wallet', this)">💰</button>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Връзка с твоята база данни
+        const firebaseConfig = {
+            apiKey: "AIzaSyCErWK81SVUAOTpqyXFBpXLycurWctJQvU",
+            authDomain: "lgbtcoin-ccc99.firebaseapp.com",
+            projectId: "lgbtcoin-ccc99",
+            storageBucket: "lgbtcoin-ccc99.firebasestorage.app",
+            messagingSenderId: "61134059788",
+            appId: "1:61134059788:web:68c25616b5583120c2b129",
+            measurementId: "G-5L46RMBZ4R"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userData = { balance: 0, speed: 5, refs: 0, miningEnd: 0, name: "" };
+        let coinPrice = 0.01;
+        let miningInterval;
+        let confirmationResult;
+
+        // 1. СИСТЕМА ЗА ВХОД (Без нужда от повторно влизане)
+        window.setupRecaptcha = () => {
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { 'size': 'normal' });
+        };
+
+        document.getElementById('btn-send-sms').addEventListener('click', () => {
+            const phone = document.getElementById('reg-phone').value;
+            if (!phone) return alert("Please enter phone number");
+            if(!window.recaptchaVerifier) setupRecaptcha();
+            
+            signInWithPhoneNumber(auth, phone, window.recaptchaVerifier)
+                .then((result) => {
+                    confirmationResult = result;
+                    document.getElementById('otp-section').style.display = 'block';
+                    document.getElementById('btn-send-sms').style.display = 'none';
+                    document.getElementById('recaptcha-container').style.display = 'none';
+                }).catch((error) => alert("Error: " + error.message));
+        });
+
+        document.getElementById('btn-verify-otp').addEventListener('click', () => {
+            const code = document.getElementById('reg-otp').value;
+            confirmationResult.confirm(code).then((result) => {
+                checkAndCreateProfile(result.user);
+            }).catch(() => alert("Invalid Code!"));
+        });
+
+        // Проверка дали потребителят вече е влязъл (Persistent Login)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                document.getElementById('bottom-nav').style.display = 'flex';
+                currentUser = user;
+                checkAndCreateProfile(user);
+                listenToMarketPrice();
+            }
+        });
+
+        async function checkAndCreateProfile(user) {
+            const userRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(userRef);
+            
+            if (!docSnap.exists()) {
+                const nameInput = document.getElementById('reg-name').value || "Miner";
+                userData = { name: nameInput, balance: 0, speed: 5, refs: 0, miningEnd: 0, uid: user.uid };
+                await setDoc(userRef, userData);
+            } else {
+                userData = docSnap.data();
+            }
+            calculateOfflineMining();
+        }
+
+        // 2. ОФЛАЙН КОПАЕНЕ И 24-ЧАСОВ ТАЙМЕР
+        const mineBtn = document.getElementById('mine-btn');
+        
+        mineBtn.addEventListener('click', async () => {
+            const now = Date.now();
+            if (now > userData.miningEnd) {
+                // Активира копаенето за точно 24 часа (86400000 милисекунди)
+                userData.miningEnd = now + 86400000;
+                await updateDoc(doc(db, "users", currentUser.uid), { miningEnd: userData.miningEnd });
+                calculateOfflineMining();
+            }
+        });
+
+        function calculateOfflineMining() {
+            clearInterval(miningInterval);
+            
+            // Ако потребителят е бил офлайн, но копаенето е било активно, добавяме пропуснатото
+            const now = Date.now();
+            
+            miningInterval = setInterval(() => {
+                const currentTime = Date.now();
+                if (currentTime < userData.miningEnd) {
+                    userData.balance += (userData.speed / 100000); 
+                    updateUI();
+                    
+                    // Синхронизация с базата данни на всеки 15 секунди
+                    if (Math.floor(currentTime / 1000) % 15 === 0) {
+                        updateDoc(doc(db, "users", currentUser.uid), { balance: userData.balance });
+                    }
+                } else {
+                    updateUI(); // Обновява UI, ако таймерът изтече
+                }
+            }, 1000);
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('ui-name').innerText = userData.name;
+            document.getElementById('ui-id').innerText = currentUser.uid;
+            document.getElementById('ui-refs').innerText = userData.refs;
+            document.getElementById('ui-speed').innerText = userData.speed;
+            document.getElementById('ui-balance').innerText = userData.balance.toFixed(6);
+            document.getElementById('ui-fiat').innerText = (userData.balance * coinPrice).toFixed(4);
+            document.getElementById('invite-link').value = `https://your-site.github.io/?ref=${currentUser.uid}`;
+
+            const now = Date.now();
+            if (now < userData.miningEnd) {
+                mineBtn.classList.add('active-mining');
+                mineBtn.innerText = "MINING...";
+                const hrs = Math.floor((userData.miningEnd - now) / 3600000);
+                const mins = Math.floor(((userData.miningEnd - now) % 3600000) / 60000);
+                document.getElementById('mining-status').innerText = `Active (Ends in ${hrs}h ${mins}m)`;
+            } else {
+                mineBtn.classList.remove('active-mining');
+                mineBtn.innerText = "START MINING";
+                document.getElementById('mining-status').innerText = "Inactive. Tap to start 24h cycle.";
+            }
+        }
+
+        // 3. ГРАФИКА И КОНТРОЛ НА ЦЕНАТА (Revolut Style)
+        let chartInstance;
+        function listenToMarketPrice() {
+            onSnapshot(doc(db, "settings", "market"), (docSnap) => {
+                if(docSnap.exists()) {
+                    coinPrice = docSnap.data().currentPrice || 0.01;
+                    document.getElementById('chart-price').innerText = coinPrice;
+                    updateChart(coinPrice);
+                }
+            });
+        }
+
+        function updateChart(price) {
+            const ctx = document.getElementById('marketChart').getContext('2d');
+            const points = [price*0.8, price*0.9, price*1.05, price*0.95, price]; 
+            
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['-4h', '-3h', '-2h', '-1h', 'Now'],
+                    datasets: [{
+                        data: points, borderColor: '#9d4edd', backgroundColor: 'rgba(157, 78, 221, 0.15)',
+                        borderWidth: 3, fill: true, tension: 0.4, pointRadius: 0
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { x: { display: false } } }
+            });
+        }
+
+        // 4. ГЛОБАЛНИ ФУНКЦИИ ЗА БУТОНИТЕ
+        window.switchTab = (tabId, btnElement) => {
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('active'); el.style.color = '#555'; });
+            
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
+            btnElement.style.color = 'var(--accent)';
+        };
+
+        window.copyLink = () => {
+            const link = document.getElementById('invite-link');
+            link.select(); document.execCommand('copy');
+            alert("Invite link copied!");
+        };
+
+        window.buyHash = (price, speed) => {
+            const wallet = "UQA6wHjAHCQAwpFpT7fqnPDTljCSW3Q949qt8xGpGjTkgk3W";
+            alert(`Instructions:\n\n1. Copy the Tonkeeper address.\n2. Send exactly ${price}€ equivalent in TON.\n3. Your +${speed} GH/s will be added shortly.\n\nAddress: ${wallet}`);
+            window.location.href = `https://app.tonkeeper.com/transfer/${wallet}`;
+        };
+
+        window.withdraw = () => {
+            const addr = document.getElementById('withdraw-addr').value;
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            if(amount < 100) return alert("Minimum withdrawal is 100 coins.");
+            if(userData.balance < amount + 1) return alert("Not enough coins! (Remember the 1 coin fee).");
+            alert("Request sent! Coins will be deposited to your external wallet after review.");
+        };
+
+        window.transfer = async () => {
+            const friendId = document.getElementById('transfer-id').value;
+            const amount = parseFloat(document.getElementById('transfer-amount').value);
+            if(amount < 50) return alert("Minimum transfer is 50 coins.");
+            if(userData.balance < amount) return alert("Insufficient balance.");
+            
+            // Временно изваждане от баланса (изисква Cloud Function за реална сигурност)
+            userData.balance -= amount;
+            await updateDoc(doc(db, "users", currentUser.uid), { balance: userData.balance });
+            alert(`Successfully sent ${amount} coins to ID: ${friendId}`);
+            updateUI();
+        };
+
+    </script>
+</body>
+</html>
