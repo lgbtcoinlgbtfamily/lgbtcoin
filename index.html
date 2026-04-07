@@ -2,186 +2,586 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LGBTCoin - Cloud Mining</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>LGBTCoin | Professional Cloud Mining Ecosystem</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
 
     <style>
+        /* ==============================================
+           ПРОФЕСИОНАЛНА CSS СИСТЕМА (UI/UX)
+           ==============================================
+        */
         :root {
-            --bg: #050505;
-            --panel: #121212;
-            --accent: #a044ff;
-            --text: #ffffff;
-            --dim: #777;
+            --bg-main: #000000;
+            --bg-card: #0d0d0d;
+            --bg-nav: rgba(10, 10, 10, 0.96);
+            --primary: #a044ff;
+            --primary-glow: rgba(160, 68, 255, 0.4);
+            --secondary: #6a0572;
+            --text-pure: #ffffff;
+            --text-muted: #808080;
+            --text-dim: #404040;
+            --success: #00ffa3;
+            --danger: #ff3e3e;
+            --rainbow: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #008800, #0000ff, #8800ff);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
-
-        /* Професионален LGBT фон */
-        .blur-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #ff000011, #ff880011, #ffff0011, #00880011, #0000ff11, #8800ff11);
-            filter: blur(100px); z-index: -1;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', sans-serif;
         }
 
-        /* Екран за Вход */
-        #login-screen {
-            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px;
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-pure);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        .login-card {
-            background: var(--panel); border: 1px solid #333; padding: 40px 25px;
-            border-radius: 25px; width: 100%; max-width: 380px; text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+
+        /* LGBT Блър ефект - по-дълбок и анимиран */
+        .ambient-glow {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(157, 78, 221, 0.15), transparent 70%);
+            z-index: -1;
+            pointer-events: none;
         }
-        h1 { font-size: 32px; font-weight: 900; letter-spacing: 2px; margin-bottom: 25px; color: var(--accent); }
+
+        .rainbow-line {
+            height: 3px;
+            width: 100%;
+            background: var(--rainbow);
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            opacity: 0.7;
+        }
+
+        /* --- СИСТЕМА ЗА СТРАНИЦИ --- */
+        .page {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            padding-bottom: 100px; /* Място за навигацията */
+            overflow-y: auto;
+            background: var(--bg-main);
+        }
+
+        .page.active {
+            display: flex;
+            animation: pageTransition 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes pageTransition {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- ВХОД (AUTH) --- */
+        #page-auth {
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at bottom, #110022 0%, #000 100%);
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo-main {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin-bottom: 40px;
+            background: var(--rainbow);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(160, 68, 255, 0.3));
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            margin-left: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
         input {
-            width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 12px;
-            border: 1px solid #222; background: #000; color: #fff; font-size: 16px; transition: 0.3s;
+            width: 100%;
+            padding: 18px;
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 16px;
+            color: #fff;
+            font-size: 16px;
+            transition: 0.3s;
         }
-        input:focus { border-color: var(--accent); outline: none; }
-        
-        button {
-            width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold;
-            cursor: pointer; background: var(--accent); color: #fff; transition: 0.2s;
+
+        input:focus {
+            border-color: var(--primary);
+            background: #151515;
+            outline: none;
+            box-shadow: 0 0 15px var(--primary-glow);
         }
-        button:active { transform: scale(0.96); }
 
-        /* Основно Приложение */
-        #app-container { display: none; height: 100vh; flex-direction: column; }
-        .view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; display: none; animation: fadeIn 0.3s ease; }
-        .view.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .card { background: var(--panel); padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #222; }
-
-        /* Mining Center */
-        .mining-area { height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .balance-text { font-size: 48px; font-weight: 900; margin-bottom: 5px; text-shadow: 0 0 20px rgba(160, 68, 255, 0.3); }
-        .fiat-text { color: var(--dim); font-size: 18px; margin-bottom: 50px; }
-        
-        .mine-btn {
-            width: 180px; height: 180px; border-radius: 90px; border: 5px solid var(--accent);
-            background: transparent; color: #fff; font-size: 26px; font-weight: bold;
-            box-shadow: 0 0 30px rgba(160, 68, 255, 0.2); cursor: pointer; transition: 0.3s;
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 20px;
+            border-radius: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
         }
-        .mine-btn.active { border-color: #00ff88; box-shadow: 0 0 40px rgba(0, 255, 136, 0.3); }
 
-        /* Navigation Bar */
-        nav {
-            position: fixed; bottom: 0; width: 100%; height: 80px; background: #080808;
-            border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 100;
+        .btn-primary:active {
+            transform: scale(0.96);
+            opacity: 0.9;
         }
-        .nav-btn { background: none; border: none; font-size: 26px; color: #444; width: auto; padding: 10px; transition: 0.3s; }
-        .nav-btn.active { color: var(--accent); transform: translateY(-5px); }
 
-        #recaptcha-box { margin-bottom: 15px; display: flex; justify-content: center; }
-        #debug-log { color: #ff4444; font-size: 12px; margin-top: 10px; display: none; }
+        /* --- ГЛАВНО ТАБЛО (MINING) --- */
+        .mining-header {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .balance-label {
+            color: var(--text-muted);
+            font-size: 14px;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .balance-value {
+            font-size: 56px;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+
+        .balance-fiat {
+            font-size: 20px;
+            color: var(--text-muted);
+            margin-bottom: 50px;
+        }
+
+        .mining-circle-wrap {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .mine-trigger-btn {
+            width: 220px;
+            height: 220px;
+            border-radius: 110px;
+            background: #000;
+            border: 4px solid var(--primary);
+            color: #fff;
+            font-size: 28px;
+            font-weight: 900;
+            cursor: pointer;
+            z-index: 10;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 40px var(--primary-glow);
+        }
+
+        .mine-trigger-btn.active {
+            border-color: var(--success);
+            box-shadow: 0 0 50px rgba(0, 255, 163, 0.3);
+            transform: scale(1.05);
+        }
+
+        .mining-status-card {
+            background: var(--bg-card);
+            border: 1px solid #222;
+            border-radius: 24px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+
+        .stat-item { text-align: center; }
+        .stat-val { display: block; font-size: 18px; font-weight: 700; color: #fff; }
+        .stat-lab { display: block; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+        /* --- КАРТИ И МАГАЗИН --- */
+        .section-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            padding-left: 5px;
+        }
+
+        .shop-card {
+            background: linear-gradient(145deg, #121212 0%, #080808 100%);
+            border: 1px solid #222;
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.3s;
+        }
+
+        .shop-card:active { border-color: var(--primary); }
+
+        .shop-info h4 { font-size: 18px; margin-bottom: 4px; }
+        .shop-info p { font-size: 13px; color: var(--text-muted); }
+
+        .price-tag {
+            background: rgba(160, 68, 255, 0.1);
+            color: var(--primary);
+            padding: 10px 18px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        /* --- ПАЗАР (REVOLUT STYLE) --- */
+        .market-card {
+            background: var(--bg-card);
+            border-radius: 28px;
+            padding: 25px;
+            border: 1px solid #222;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 250px;
+            margin-top: 20px;
+        }
+
+        /* --- НАВИГАЦИЯ --- */
+        .navbar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 85px;
+            background: var(--bg-nav);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid #222;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 20px; /* За iPhone Home Bar */
+            z-index: 1500;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 22px;
+            transition: 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nav-item span {
+            font-size: 10px;
+            font-weight: 700;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: -15px;
+            width: 4px; height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        /* MODALS */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            padding: 25px;
+        }
+
+        .modal-content {
+            background: #111;
+            padding: 30px;
+            border-radius: 30px;
+            border: 1px solid #333;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        /* СПЕЦИФИЧНИ ЗА МОБИЛНИ */
+        @media screen and (max-width: 380px) {
+            .balance-value { font-size: 44px; }
+            .mine-trigger-btn { width: 180px; height: 180px; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="blur-layer"></div>
+    <div class="rainbow-line"></div>
+    <div class="ambient-glow"></div>
 
-    <div id="login-screen">
-        <div class="login-card">
-            <h1>LGBTCoin</h1>
+    <section id="page-auth" class="page active">
+        <div class="auth-container">
+            <div class="logo-main">LGBTCoin</div>
+            
             <div id="auth-step-1">
-                <input type="text" id="in-name" placeholder="Full Name">
-                <input type="tel" id="in-phone" placeholder="Phone (+359...)">
-                <div id="recaptcha-box"></div>
-                <button onclick="handleLogin()">Login / Register</button>
-                <p id="debug-log"></p>
+                <div class="input-group">
+                    <label>Account Name</label>
+                    <input type="text" id="reg-name" placeholder="Enter full name">
+                </div>
+                <div class="input-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="reg-phone" placeholder="+359 88 ...">
+                </div>
+                <div id="recaptcha-container"></div>
+                <button class="btn-primary" onclick="handleAuth()">Access Network</button>
+                <p id="auth-error" style="color:var(--danger); font-size:12px; margin-top:15px; display:none;"></p>
             </div>
+
             <div id="auth-step-2" style="display:none;">
-                <p style="margin-bottom:15px; color:#aaa;">Enter 6-digit SMS code</p>
-                <input type="number" id="in-otp" placeholder="000000">
-                <button onclick="handleVerify()">Confirm Code</button>
+                <div class="input-group">
+                    <label>Verification Code</label>
+                    <input type="number" id="reg-otp" placeholder="6-digit code">
+                </div>
+                <button class="btn-primary" onclick="verifyOTP()">Confirm Identity</button>
+                <p onclick="location.reload()" style="color:var(--text-muted); font-size:12px; margin-top:20px; cursor:pointer;">Wrong number? Go back</p>
             </div>
+        </div>
+    </section>
+
+    <section id="page-mining" class="page">
+        <div class="mining-header">
+            <p class="balance-label">CURRENT BALANCE</p>
+            <h1 class="balance-value" id="ui-balance">0.000000</h1>
+            <p class="balance-fiat">≈ $<span id="ui-fiat">0.00</span></p>
+        </div>
+
+        <div class="mining-circle-wrap">
+            <button class="mine-trigger-btn" id="main-mine-btn" onclick="triggerMining()">START</button>
+        </div>
+
+        <div class="mining-status-card">
+            <div class="stat-item">
+                <span class="stat-val" id="ui-speed">5.00</span>
+                <span class="stat-lab">GH/s SPEED</span>
+            </div>
+            <div class="stat-item" style="border-left: 1px solid #222; border-right: 1px solid #222; padding: 0 20px;">
+                <span class="stat-val" id="ui-timer">24:00:00</span>
+                <span class="stat-lab">TIME LEFT</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-val" id="ui-status">Idle</span>
+                <span class="stat-lab">STATUS</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="page-profile" class="page">
+        <h2 class="section-title">My Profile</h2>
+        <div class="card" style="background:var(--bg-card); border-radius:24px; padding:25px; margin-bottom:20px; border:1px solid #222;">
+            <p style="color:var(--text-muted); font-size:11px; text-transform:uppercase;">Network Username</p>
+            <p id="prof-name" style="font-size:22px; font-weight:800; margin-bottom:15px;">User</p>
+            <p style="color:var(--text-muted); font-size:11px; text-transform:uppercase;">Unique Node ID</p>
+            <p id="prof-id" style="font-size:11px; color:var(--primary); font-family:monospace; word-break:break-all;">...</p>
+        </div>
+
+        <h2 class="section-title">Affiliate System</h2>
+        <div class="card" style="background:var(--bg-card); border-radius:24px; padding:25px; border:1px solid #222;">
+            <p style="font-size:14px; margin-bottom:15px; line-height:1.5;">Invite **10 partners** to your node cluster and receive a permanent **+10 GH/s** boost.</p>
+            <div style="background:#000; padding:15px; border-radius:12px; border:1px solid #222; margin-bottom:15px;">
+                <input type="text" id="ref-url-field" readonly style="border:none; padding:0; font-size:12px; background:transparent;">
+            </div>
+            <button class="btn-primary" style="padding:15px;" onclick="copyReferral()">Copy Invite Link</button>
+            <div style="margin-top:20px; text-align:center;">
+                <p style="font-size:12px; color:var(--text-muted);">Current Network Partners</p>
+                <h4 style="font-size:24px; margin-top:5px;"><span id="prof-refs">0</span> / 10</h4>
+            </div>
+        </div>
+    </section>
+
+    <section id="page-shop" class="page">
+        <h2 class="section-title">Mining Rigs</h2>
+        
+        <div class="shop-card" onclick="initPurchase(0.99, 10)">
+            <div class="shop-info">
+                <h4>Carbon Rig</h4>
+                <p>Boost: +10 GH/s | Life: Permanent</p>
+            </div>
+            <div class="price-tag">0.99 €</div>
+        </div>
+
+        <div class="shop-card" onclick="initPurchase(1.99, 50)">
+            <div class="shop-info">
+                <h4>Neon Station</h4>
+                <p>Boost: +50 GH/s | Life: Permanent</p>
+            </div>
+            <div class="price-tag">1.99 €</div>
+        </div>
+
+        <div class="shop-card" onclick="initPurchase(5.99, 100)">
+            <div class="shop-info">
+                <h4>Prism Core</h4>
+                <p>Boost: +100 GH/s | Life: Permanent</p>
+            </div>
+            <div class="price-tag">5.99 €</div>
+        </div>
+
+        <div style="padding:15px; color:var(--text-muted); font-size:11px; text-align:center; line-height:1.4;">
+            Payments are processed via the TON Blockchain for maximum privacy and speed.
+        </div>
+    </section>
+
+    <section id="page-market" class="page">
+        <h2 class="section-title">Live Market</h2>
+        <div class="market-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <p style="font-size:12px; color:var(--text-muted);">LGBTCoin / USD</p>
+                    <h2 style="font-size:36px; font-weight:900;">$<span id="market-price-ui">0.01</span></h2>
+                </div>
+                <div style="background:rgba(0,255,163,0.1); color:var(--success); padding:5px 10px; border-radius:8px; font-size:12px; font-weight:800;">
+                    +12.4%
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+
+        <div style="margin-top:20px; display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+            <div class="card" style="background:var(--bg-card); padding:15px; border-radius:20px; border:1px solid #222;">
+                <p style="font-size:10px; color:var(--text-muted);">24H VOLUME</p>
+                <p style="font-size:16px; font-weight:700; margin-top:5px;">$1.2M</p>
+            </div>
+            <div class="card" style="background:var(--bg-card); padding:15px; border-radius:20px; border:1px solid #222;">
+                <p style="font-size:10px; color:var(--text-muted);">TOTAL HOLDERS</p>
+                <p style="font-size:16px; font-weight:700; margin-top:5px;">4,812</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="page-wallet" class="page">
+        <h2 class="section-title">Global Wallet</h2>
+        
+        <div class="card" style="background:linear-gradient(135deg, #a044ff 0%, #6a0572 100%); border:none; padding:30px; border-radius:28px; margin-bottom:25px;">
+            <p style="font-size:12px; opacity:0.8;">TOTAL AVAILABLE</p>
+            <h2 style="font-size:42px; font-weight:900; margin:5px 0;" id="wallet-balance-ui">0.00</h2>
+            <p style="font-size:14px; opacity:0.8;">≈ $<span id="wallet-fiat-ui">0.00</span></p>
+        </div>
+
+        <h3 style="font-size:18px; margin-bottom:15px;">External Withdrawal</h3>
+        <div class="card" style="background:var(--bg-card); padding:20px; border-radius:24px; border:1px solid #222;">
+            <div class="input-group">
+                <label>Destination Address (TON/BEP20)</label>
+                <input type="text" placeholder="Paste address here">
+            </div>
+            <div class="input-group">
+                <label>Amount (Min: 100)</label>
+                <input type="number" id="wd-amount" placeholder="0.00">
+            </div>
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:15px;">Network Fee: 1 LGBTCoin will be deducted.</p>
+            <button class="btn-primary" onclick="handleWithdraw()">Submit Request</button>
+        </div>
+
+        <h3 style="font-size:18px; margin:25px 0 15px;">Internal Transfer</h3>
+        <div class="card" style="background:var(--bg-card); padding:20px; border-radius:24px; border:1px solid #222;">
+            <div class="input-group">
+                <label>Receiver's Node ID</label>
+                <input type="text" id="p2p-target" placeholder="Enter ID">
+            </div>
+            <div class="input-group">
+                <label>Amount (Min: 50)</label>
+                <input type="number" id="p2p-amount" placeholder="0.00">
+            </div>
+            <button class="btn-primary" style="background:#222;" onclick="handleP2P()">Instant Transfer</button>
+        </div>
+    </section>
+
+    <nav class="navbar" id="app-nav" style="display:none;">
+        <div class="nav-item" onclick="switchPage('page-profile', this)">
+            👤 <span>Profile</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('page-shop', this)">
+            🛒 <span>Rig Shop</span>
+        </div>
+        <div class="nav-item active" onclick="switchPage('page-mining', this)">
+            ⛏️ <span>Mining</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('page-market', this)">
+            📈 <span>Market</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('page-wallet', this)">
+            💰 <span>Wallet</span>
+        </div>
+    </nav>
+
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom:15px;">Confirm Upgrade</h2>
+            <p style="font-size:14px; color:var(--text-muted); margin-bottom:25px; line-height:1.5;" id="pay-details">
+                Please send 0.99 EUR to the following TON address. Boost will be added after confirmation.
+            </p>
+            <div style="background:#000; padding:15px; border-radius:12px; border:1px solid #333; margin-bottom:20px;">
+                <p id="target-wallet" style="font-size:10px; font-family:monospace; word-break:break-all;">UQA6wHjAHCQAwpFpT7fqnPDTljCSW3Q949qt8xGpGjTkgk3W</p>
+            </div>
+            <button class="btn-primary" onclick="openTonkeeper()">Open Tonkeeper</button>
+            <p onclick="closeModal()" style="color:var(--text-muted); font-size:13px; margin-top:20px; cursor:pointer;">Cancel</p>
         </div>
     </div>
 
-    <main id="app-container">
-        
-        <div id="tab-mining" class="view active">
-            <div class="mining-area">
-                <div class="balance-text" id="ui-balance">0.000000</div>
-                <div class="fiat-text">≈ $<span id="ui-fiat">0.00</span></div>
-                
-                <button class="mine-btn" id="ui-mine-btn" onclick="startMiningCycle()">START</button>
-                
-                <p style="margin-top:40px; color:#aaa;">Speed: <strong id="ui-speed" style="color:#fff;">5</strong> GH/s</p>
-                <p id="ui-timer" style="font-size:14px; color:var(--accent); margin-top:10px; font-weight:600;">Ready</p>
-            </div>
-        </div>
-
-        <div id="tab-profile" class="view">
-            <h2>Account Details</h2>
-            <div class="card">
-                <p style="color:#555; font-size:12px;">NAME</p>
-                <p id="ui-prof-name" style="font-size:22px; margin-bottom:15px;">...</p>
-                <p style="color:#555; font-size:12px;">USER ID</p>
-                <p id="ui-prof-id" style="font-size:11px; font-family:monospace; color:#888;">...</p>
-            </div>
-            <div class="card">
-                <h3>Affiliate Center</h3>
-                <p style="font-size:14px; color:#aaa; margin:10px 0;">Invite 10 friends to get +10 GH/s speed.</p>
-                <input type="text" id="ui-ref-link" readonly style="font-size:12px; background:#000; border-color:#333;">
-                <button onclick="copyRef()" style="background:#222; padding:10px; font-size:14px;">Copy My Link</button>
-            </div>
-        </div>
-
-        <div id="tab-shop" class="view">
-            <h2>Upgrades</h2>
-            <div class="card" style="text-align:center;">
-                <h3>GPU Miner (+10 GH/s)</h3>
-                <p style="font-size:24px; color:var(--accent); margin:10px 0;">0.99 €</p>
-                <button onclick="processPurchase(0.99, 10)">Buy Now</button>
-            </div>
-            <div class="card" style="text-align:center;">
-                <h3>ASIC Miner (+50 GH/s)</h3>
-                <p style="font-size:24px; color:var(--accent); margin:10px 0;">1.99 €</p>
-                <button onclick="processPurchase(1.99, 50)">Buy Now</button>
-            </div>
-        </div>
-
-        <div id="tab-market" class="view">
-            <h2>Market</h2>
-            <div class="card">
-                <p style="text-align:center; color:#666;">Price per 1 LGBTCoin</p>
-                <h3 style="text-align:center; font-size:36px; margin-bottom:20px;">$<span id="ui-price">0.01</span></h3>
-                <canvas id="marketChart"></canvas>
-            </div>
-        </div>
-
-        <div id="tab-wallet" class="view">
-            <h2>Wallet</h2>
-            <div class="card">
-                <h3>Withdrawal</h3>
-                <p style="font-size:12px; color:#666; margin-bottom:15px;">Minimum: 100 Coins</p>
-                <input type="text" placeholder="Wallet Address">
-                <input type="number" placeholder="Amount">
-                <button onclick="alert('Withdrawal request sent for review.')">Request Payout</button>
-            </div>
-        </div>
-
-        <nav>
-            <button class="nav-btn" onclick="openTab('tab-profile', this)">👤</button>
-            <button class="nav-btn" onclick="openTab('tab-shop', this)">🛒</button>
-            <button class="nav-btn active" onclick="openTab('tab-mining', this)">⛏️</button>
-            <button class="nav-btn" onclick="openTab('tab-market', this)">📈</button>
-            <button class="nav-btn" onclick="navToWallet('tab-wallet', this)">💰</button>
-        </nav>
-    </main>
-
     <script type="module">
+        // Firebase модули
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // CONFIG ЗА ПРОЕКТ: lgbtcoinfamily
+        // ТВОЯТА КОНФИГУРАЦИЯ ЗА ПРОЕКТ: lgbtcoinfamily
         const firebaseConfig = {
             apiKey: "AIzaSyB7LQBNvVJrw2zzg3aIzY_2w4q_sCTDg34",
             authDomain: "lgbtcoinfamily.firebaseapp.com",
@@ -196,124 +596,247 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let uData = { balance: 0, speed: 5, miningEnd: 0, name: "", refs: 0 };
-        let livePrice = 0.01;
-        let loop;
+        // --- Глобално състояние ---
+        let appData = {
+            balance: 0,
+            speed: 5.0,
+            miningEnd: 0,
+            name: "",
+            refs: 0,
+            lastSync: Date.now()
+        };
+        let globalPrice = 0.01;
+        let chartInstance;
+        let miningInterval;
 
-        // --- AUTH ---
-        window.handleLogin = () => {
-            const phone = document.getElementById('in-phone').value.trim();
-            const log = document.getElementById('debug-log');
-            if(!phone.startsWith('+')) { log.innerText = "Error: Use +359... format"; log.style.display="block"; return; }
+        // --- AUTH ЛОГИКА ---
+        window.handleAuth = () => {
+            const phone = document.getElementById('reg-phone').value.trim();
+            const name = document.getElementById('reg-name').value.trim();
+            const err = document.getElementById('auth-error');
 
-            if(!window.captcha) window.captcha = new RecaptchaVerifier(auth, 'recaptcha-box', { size: 'normal' });
+            if (name.length < 3) { showError("Enter valid name"); return; }
+            if (!phone.startsWith('+')) { showError("Use format: +359..."); return; }
 
-            signInWithPhoneNumber(auth, phone, window.captcha)
-                .then(res => { window.verifyRes = res; document.getElementById('auth-step-1').style.display="none"; document.getElementById('auth-step-2').style.display="block"; })
-                .catch(err => { log.innerText = "System Error. Check Firebase Settings."; log.style.display="block"; console.error(err); });
+            if (!window.recaptchaVerifier) {
+                window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+            }
+
+            signInWithPhoneNumber(auth, phone, window.recaptchaVerifier)
+                .then(res => {
+                    window.confirmationResult = res;
+                    document.getElementById('auth-step-1').style.display = 'none';
+                    document.getElementById('auth-step-2').style.display = 'block';
+                }).catch(e => showError(e.message));
         };
 
-        window.handleVerify = () => {
-            const otp = document.getElementById('in-otp').value;
-            window.verifyRes.confirm(otp).then(res => boot(res.user)).catch(() => alert("Invalid Code!"));
+        window.verifyOTP = () => {
+            const code = document.getElementById('reg-otp').value;
+            window.confirmationResult.confirm(code).then(result => {
+                bootApp(result.user);
+            }).catch(() => alert("Invalid Verification Code"));
         };
 
-        onAuthStateChanged(auth, u => { if(u) boot(u); });
-
-        async function boot(u) {
-            document.getElementById('login-screen').style.display="none";
-            document.getElementById('app-container').style.display="flex";
-            
-            const ref = doc(db, "users", u.uid);
-            const snap = await getDoc(ref);
-            if(!snap.exists()) {
-                uData.name = document.getElementById('in-name').value || "New Miner";
-                await setDoc(ref, uData);
-            } else { uData = snap.data(); }
-            
-            startCore(u.uid);
-            initMarket();
+        function showError(m) {
+            const e = document.getElementById('auth-error');
+            e.innerText = m; e.style.display = 'block';
         }
 
-        // --- MINING ENGINE ---
-        function startCore(uid) {
-            if(loop) clearInterval(loop);
-            loop = setInterval(() => {
+        // --- СТАРТИРАНЕ ---
+        onAuthStateChanged(auth, user => { if (user) bootApp(user); });
+
+        async function bootApp(user) {
+            document.getElementById('page-auth').classList.remove('active');
+            document.getElementById('app-nav').style.display = 'flex';
+            document.getElementById('page-mining').classList.add('active');
+
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) {
+                appData.name = document.getElementById('reg-name').value || "Miner";
+                await setDoc(userRef, appData);
+            } else {
+                const cloud = userSnap.data();
+                // ОФЛАЙН КОПАЕНЕ: Пресмятане на монетите за времето на отсъствие
                 const now = Date.now();
-                if(now < uData.miningEnd) {
-                    uData.balance += (uData.speed / 100000);
-                    if(Math.floor(now/1000) % 15 === 0) updateDoc(doc(db, "users", uid), { balance: uData.balance });
+                const diffSec = (now - cloud.lastSync) / 1000;
+                if (now < cloud.miningEnd) {
+                    cloud.balance += (cloud.speed / 100000) * diffSec;
+                } else if (cloud.lastSync < cloud.miningEnd) {
+                    const activeDiff = (cloud.miningEnd - cloud.lastSync) / 1000;
+                    cloud.balance += (cloud.speed / 100000) * activeDiff;
                 }
-                updateView(uid);
+                appData = cloud;
+                await updateDoc(userRef, { balance: appData.balance, lastSync: now });
+            }
+
+            // Първоначално зареждане на UI
+            document.getElementById('prof-name').innerText = appData.name;
+            document.getElementById('prof-id').innerText = user.uid;
+            document.getElementById('ref-url-field').value = `https://${window.location.hostname}/?ref=${user.uid}`;
+            
+            startMiningEngine(user.uid);
+            initMarketSync();
+        }
+
+        // --- ДВИГАТЕЛ ЗА КОПАЕНЕ ---
+        function startMiningEngine(uid) {
+            if (miningInterval) clearInterval(miningInterval);
+
+            miningInterval = setInterval(() => {
+                const now = Date.now();
+                if (now < appData.miningEnd) {
+                    // Копаене: добавяне на малки части всяка секунда
+                    appData.balance += (appData.speed / 100000);
+                    
+                    // Синхронизация с БД на всеки 20 сек
+                    if (Math.floor(now/1000) % 20 === 0) {
+                        updateDoc(doc(db, "users", uid), { 
+                            balance: appData.balance, 
+                            lastSync: now 
+                        });
+                    }
+                    updateUI(true);
+                } else {
+                    updateUI(false);
+                }
             }, 1000);
         }
 
-        window.startMiningCycle = async () => {
-            if(Date.now() > uData.miningEnd) {
-                uData.miningEnd = Date.now() + 86400000;
-                await updateDoc(doc(db, "users", auth.currentUser.uid), { miningEnd: uData.miningEnd });
+        window.triggerMining = async () => {
+            if (Date.now() > appData.miningEnd) {
+                appData.miningEnd = Date.now() + 86400000; // 24 часа
+                await updateDoc(doc(db, "users", auth.currentUser.uid), { 
+                    miningEnd: appData.miningEnd 
+                });
             }
         };
 
-        function updateView(uid) {
-            document.getElementById('ui-prof-name').innerText = uData.name;
-            document.getElementById('ui-prof-id').innerText = uid;
-            document.getElementById('ui-balance').innerText = uData.balance.toFixed(6);
-            document.getElementById('ui-fiat').innerText = (uData.balance * livePrice).toFixed(4);
-            document.getElementById('ui-speed').innerText = uData.speed;
-            document.getElementById('ui-ref-link').value = `https://${window.location.hostname}/?ref=${uid}`;
+        function updateUI(isMining) {
+            document.getElementById('ui-balance').innerText = appData.balance.toFixed(6);
+            document.getElementById('ui-fiat').innerText = (appData.balance * globalPrice).toFixed(4);
+            document.getElementById('ui-speed').innerText = appData.speed.toFixed(2);
+            document.getElementById('prof-refs').innerText = appData.refs;
+            
+            // Wallet UI
+            document.getElementById('wallet-balance-ui').innerText = appData.balance.toFixed(2);
+            document.getElementById('wallet-fiat-ui').innerText = (appData.balance * globalPrice).toFixed(2);
 
-            const btn = document.getElementById('ui-mine-btn');
+            const btn = document.getElementById('main-mine-btn');
             const timer = document.getElementById('ui-timer');
-            const now = Date.now();
-            if(now < uData.miningEnd) {
+            const status = document.getElementById('ui-status');
+
+            if (isMining) {
                 btn.innerText = "MINING..."; btn.classList.add('active');
-                const diff = uData.miningEnd - now;
+                status.innerText = "Active"; status.style.color = "var(--success)";
+                
+                const diff = appData.miningEnd - Date.now();
                 const h = Math.floor(diff / 3600000);
                 const m = Math.floor((diff % 3600000) / 60000);
-                timer.innerText = `Active: ${h}h ${m}m left`;
+                const s = Math.floor((diff % 60000) / 1000);
+                timer.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
             } else {
                 btn.innerText = "START"; btn.classList.remove('active');
-                timer.innerText = "System Standby";
+                status.innerText = "Idle"; status.style.color = "var(--text-muted)";
+                timer.innerText = "24:00:00";
             }
         }
 
-        // --- MARKET ---
-        function initMarket() {
+        // --- ПАЗАР И ГРАФИКА ---
+        function initMarketSync() {
             onSnapshot(doc(db, "settings", "market"), d => {
-                if(d.exists()) {
-                    livePrice = d.data().currentPrice || 0.01;
-                    document.getElementById('ui-price').innerText = livePrice;
-                    drawChart();
+                if (d.exists()) {
+                    globalPrice = d.data().currentPrice || 0.01;
+                    document.getElementById('market-price-ui').innerText = globalPrice;
+                    renderProfessionalChart();
                 }
             });
         }
 
-        function drawChart() {
-            const ctx = document.getElementById('marketChart').getContext('2d');
-            new Chart(ctx, {
+        function renderProfessionalChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(160, 68, 255, 0.4)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            if (chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['-4h', '-3h', '-2h', '-1h', 'Now'],
-                    datasets: [{ data: [livePrice*0.85, livePrice*1.05, livePrice*0.9, livePrice*1.1, livePrice], borderColor: '#a044ff', tension: 0.4, fill: false }]
+                    labels: ['04:00', '08:00', '12:00', '16:00', '20:00', 'Now'],
+                    datasets: [{
+                        data: [globalPrice*0.7, globalPrice*0.9, globalPrice*1.2, globalPrice*0.8, globalPrice*1.1, globalPrice],
+                        borderColor: '#a044ff',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    }]
                 },
-                options: { plugins: { legend: { display: false } }, scales: { x: { display: false } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#444' } },
+                        y: { grid: { color: '#111' }, ticks: { display: false } }
+                    }
+                }
             });
         }
 
-        window.openTab = (id, btn) => {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        // --- НАВИГАЦИЯ ---
+        window.switchPage = (id, btn) => {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             btn.classList.add('active');
         };
 
-        window.navToWallet = (id, btn) => { openTab(id, btn); };
-        window.copyRef = () => { document.getElementById('ui-ref-link').select(); document.execCommand('copy'); alert("Link Copied!"); };
-        window.processPurchase = (eur, boost) => { 
-            const wall = "UQA6wHjAHCQAwpFpT7fqnPDTljCSW3Q949qt8xGpGjTkgk3W";
-            alert(`Transfer ${eur}€ to:\n${wall}\n\nBoost will be added after review.`);
-            window.location.href = `https://app.tonkeeper.com/transfer/${wall}`;
+        // --- SHOP & PAYMENTS ---
+        let pendingUpgrade = { eur: 0, gh: 0 };
+        window.initPurchase = (eur, gh) => {
+            pendingUpgrade = { eur, gh };
+            document.getElementById('pay-details').innerText = `To upgrade your hardware and receive +${gh} GH/s, please send ${eur} EUR equivalent in TON to the address below.`;
+            document.getElementById('payment-modal').style.display = 'flex';
+        };
+
+        window.closeModal = () => { document.getElementById('payment-modal').style.display = 'none'; };
+        
+        window.openTonkeeper = () => {
+            const wallet = "UQA6wHjAHCQAwpFpT7fqnPDTljCSW3Q949qt8xGpGjTkgk3W";
+            window.location.href = `ton://transfer/${wallet}?text=UID_${auth.currentUser.uid}`;
+        };
+
+        // --- WALLET FUNCTIONS ---
+        window.handleWithdraw = () => {
+            const amount = parseFloat(document.getElementById('wd-amount').value);
+            if (amount < 100) return alert("Minimum withdrawal is 100 coins.");
+            if (appData.balance < amount + 1) return alert("Insufficient balance (Need amount + 1 for fee).");
+            alert("Withdrawal request sent to blockchain queue.");
+        };
+
+        window.handleP2P = async () => {
+            const target = document.getElementById('p2p-target').value;
+            const amount = parseFloat(document.getElementById('p2p-amount').value);
+            if (amount < 50) return alert("Min transfer is 50 coins.");
+            if (appData.balance < amount) return alert("Insufficient funds.");
+            
+            // Локално намаляване за бързина
+            appData.balance -= amount;
+            await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: appData.balance });
+            alert(`Successfully transferred ${amount} coins to ${target}`);
+        };
+
+        window.copyReferral = () => {
+            const field = document.getElementById('ref-url-field');
+            field.select();
+            document.execCommand('copy');
+            alert("Invite link copied to clipboard!");
         };
 
     </script>
