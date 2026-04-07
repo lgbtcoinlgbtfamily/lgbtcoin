@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LGBTCoin - Cloud Mining</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: #121212;
+            --accent: #a044ff;
+            --text: #ffffff;
+            --dim: #777;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+
+        /* Професионален LGBT фон */
+        .blur-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #ff000011, #ff880011, #ffff0011, #00880011, #0000ff11, #8800ff11);
+            filter: blur(100px); z-index: -1;
+        }
+
+        /* Екран за Вход */
+        #login-screen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px;
+        }
+        .login-card {
+            background: var(--panel); border: 1px solid #333; padding: 40px 25px;
+            border-radius: 25px; width: 100%; max-width: 380px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        h1 { font-size: 32px; font-weight: 900; letter-spacing: 2px; margin-bottom: 25px; color: var(--accent); }
+
+        input {
+            width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 12px;
+            border: 1px solid #222; background: #000; color: #fff; font-size: 16px; transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); outline: none; }
+        
+        button {
+            width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold;
+            cursor: pointer; background: var(--accent); color: #fff; transition: 0.2s;
+        }
+        button:active { transform: scale(0.96); }
+
+        /* Основно Приложение */
+        #app-container { display: none; height: 100vh; flex-direction: column; }
+        .view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; display: none; animation: fadeIn 0.3s ease; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--panel); padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #222; }
+
+        /* Mining Center */
+        .mining-area { height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .balance-text { font-size: 48px; font-weight: 900; margin-bottom: 5px; text-shadow: 0 0 20px rgba(160, 68, 255, 0.3); }
+        .fiat-text { color: var(--dim); font-size: 18px; margin-bottom: 50px; }
+        
+        .mine-btn {
+            width: 180px; height: 180px; border-radius: 90px; border: 5px solid var(--accent);
+            background: transparent; color: #fff; font-size: 26px; font-weight: bold;
+            box-shadow: 0 0 30px rgba(160, 68, 255, 0.2); cursor: pointer; transition: 0.3s;
+        }
+        .mine-btn.active { border-color: #00ff88; box-shadow: 0 0 40px rgba(0, 255, 136, 0.3); }
+
+        /* Navigation Bar */
+        nav {
+            position: fixed; bottom: 0; width: 100%; height: 80px; background: #080808;
+            border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 100;
+        }
+        .nav-btn { background: none; border: none; font-size: 26px; color: #444; width: auto; padding: 10px; transition: 0.3s; }
+        .nav-btn.active { color: var(--accent); transform: translateY(-5px); }
+
+        #recaptcha-box { margin-bottom: 15px; display: flex; justify-content: center; }
+        #debug-log { color: #ff4444; font-size: 12px; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="blur-layer"></div>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <h1>LGBTCoin</h1>
+            <div id="auth-step-1">
+                <input type="text" id="in-name" placeholder="Full Name">
+                <input type="tel" id="in-phone" placeholder="Phone (+359...)">
+                <div id="recaptcha-box"></div>
+                <button onclick="handleLogin()">Login / Register</button>
+                <p id="debug-log"></p>
+            </div>
+            <div id="auth-step-2" style="display:none;">
+                <p style="margin-bottom:15px; color:#aaa;">Enter 6-digit SMS code</p>
+                <input type="number" id="in-otp" placeholder="000000">
+                <button onclick="handleVerify()">Confirm Code</button>
+            </div>
+        </div>
+    </div>
+
+    <main id="app-container">
+        
+        <div id="tab-mining" class="view active">
+            <div class="mining-area">
+                <div class="balance-text" id="ui-balance">0.000000</div>
+                <div class="fiat-text">≈ $<span id="ui-fiat">0.00</span></div>
+                
+                <button class="mine-btn" id="ui-mine-btn" onclick="startMiningCycle()">START</button>
+                
+                <p style="margin-top:40px; color:#aaa;">Speed: <strong id="ui-speed" style="color:#fff;">5</strong> GH/s</p>
+                <p id="ui-timer" style="font-size:14px; color:var(--accent); margin-top:10px; font-weight:600;">Ready</p>
+            </div>
+        </div>
+
+        <div id="tab-profile" class="view">
+            <h2>Account Details</h2>
+            <div class="card">
+                <p style="color:#555; font-size:12px;">NAME</p>
+                <p id="ui-prof-name" style="font-size:22px; margin-bottom:15px;">...</p>
+                <p style="color:#555; font-size:12px;">USER ID</p>
+                <p id="ui-prof-id" style="font-size:11px; font-family:monospace; color:#888;">...</p>
+            </div>
+            <div class="card">
+                <h3>Affiliate Center</h3>
+                <p style="font-size:14px; color:#aaa; margin:10px 0;">Invite 10 friends to get +10 GH/s speed.</p>
+                <input type="text" id="ui-ref-link" readonly style="font-size:12px; background:#000; border-color:#333;">
+                <button onclick="copyRef()" style="background:#222; padding:10px; font-size:14px;">Copy My Link</button>
+            </div>
+        </div>
+
+        <div id="tab-shop" class="view">
+            <h2>Upgrades</h2>
+            <div class="card" style="text-align:center;">
+                <h3>GPU Miner (+10 GH/s)</h3>
+                <p style="font-size:24px; color:var(--accent); margin:10px 0;">0.99 €</p>
+                <button onclick="processPurchase(0.99, 10)">Buy Now</button>
+            </div>
+            <div class="card" style="text-align:center;">
+                <h3>ASIC Miner (+50 GH/s)</h3>
+                <p style="font-size:24px; color:var(--accent); margin:10px 0;">1.99 €</p>
+                <button onclick="processPurchase(1.99, 50)">Buy Now</button>
+            </div>
+        </div>
+
+        <div id="tab-market" class="view">
+            <h2>Market</h2>
+            <div class="card">
+                <p style="text-align:center; color:#666;">Price per 1 LGBTCoin</p>
+                <h3 style="text-align:center; font-size:36px; margin-bottom:20px;">$<span id="ui-price">0.01</span></h3>
+                <canvas id="marketChart"></canvas>
+            </div>
+        </div>
+
+        <div id="tab-wallet" class="view">
+            <h2>Wallet</h2>
+            <div class="card">
+                <h3>Withdrawal</h3>
+                <p style="font-size:12px; color:#666; margin-bottom:15px;">Minimum: 100 Coins</p>
+                <input type="text" placeholder="Wallet Address">
+                <input type="number" placeholder="Amount">
+                <button onclick="alert('Withdrawal request sent for review.')">Request Payout</button>
+            </div>
+        </div>
+
+        <nav>
+            <button class="nav-btn" onclick="openTab('tab-profile', this)">👤</button>
+            <button class="nav-btn" onclick="openTab('tab-shop', this)">🛒</button>
+            <button class="nav-btn active" onclick="openTab('tab-mining', this)">⛏️</button>
+            <button class="nav-btn" onclick="openTab('tab-market', this)">📈</button>
+            <button class="nav-btn" onclick="navToWallet('tab-wallet', this)">💰</button>
+        </nav>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // CONFIG ЗА ПРОЕКТ: lgbtcoinfamily
+        const firebaseConfig = {
+            apiKey: "AIzaSyB7LQBNvVJrw2zzg3aIzY_2w4q_sCTDg34",
+            authDomain: "lgbtcoinfamily.firebaseapp.com",
+            projectId: "lgbtcoinfamily",
+            storageBucket: "lgbtcoinfamily.firebasestorage.app",
+            messagingSenderId: "941980491873",
+            appId: "1:941980491873:web:06da99602cff5ab6428a20",
+            measurementId: "G-5LN66CV2EB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let uData = { balance: 0, speed: 5, miningEnd: 0, name: "", refs: 0 };
+        let livePrice = 0.01;
+        let loop;
+
+        // --- AUTH ---
+        window.handleLogin = () => {
+            const phone = document.getElementById('in-phone').value.trim();
+            const log = document.getElementById('debug-log');
+            if(!phone.startsWith('+')) { log.innerText = "Error: Use +359... format"; log.style.display="block"; return; }
+
+            if(!window.captcha) window.captcha = new RecaptchaVerifier(auth, 'recaptcha-box', { size: 'normal' });
+
+            signInWithPhoneNumber(auth, phone, window.captcha)
+                .then(res => { window.verifyRes = res; document.getElementById('auth-step-1').style.display="none"; document.getElementById('auth-step-2').style.display="block"; })
+                .catch(err => { log.innerText = "System Error. Check Firebase Settings."; log.style.display="block"; console.error(err); });
+        };
+
+        window.handleVerify = () => {
+            const otp = document.getElementById('in-otp').value;
+            window.verifyRes.confirm(otp).then(res => boot(res.user)).catch(() => alert("Invalid Code!"));
+        };
+
+        onAuthStateChanged(auth, u => { if(u) boot(u); });
+
+        async function boot(u) {
+            document.getElementById('login-screen').style.display="none";
+            document.getElementById('app-container').style.display="flex";
+            
+            const ref = doc(db, "users", u.uid);
+            const snap = await getDoc(ref);
+            if(!snap.exists()) {
+                uData.name = document.getElementById('in-name').value || "New Miner";
+                await setDoc(ref, uData);
+            } else { uData = snap.data(); }
+            
+            startCore(u.uid);
+            initMarket();
+        }
+
+        // --- MINING ENGINE ---
+        function startCore(uid) {
+            if(loop) clearInterval(loop);
+            loop = setInterval(() => {
+                const now = Date.now();
+                if(now < uData.miningEnd) {
+                    uData.balance += (uData.speed / 100000);
+                    if(Math.floor(now/1000) % 15 === 0) updateDoc(doc(db, "users", uid), { balance: uData.balance });
+                }
+                updateView(uid);
+            }, 1000);
+        }
+
+        window.startMiningCycle = async () => {
+            if(Date.now() > uData.miningEnd) {
+                uData.miningEnd = Date.now() + 86400000;
+                await updateDoc(doc(db, "users", auth.currentUser.uid), { miningEnd: uData.miningEnd });
+            }
+        };
+
+        function updateView(uid) {
+            document.getElementById('ui-prof-name').innerText = uData.name;
+            document.getElementById('ui-prof-id').innerText = uid;
+            document.getElementById('ui-balance').innerText = uData.balance.toFixed(6);
+            document.getElementById('ui-fiat').innerText = (uData.balance * livePrice).toFixed(4);
+            document.getElementById('ui-speed').innerText = uData.speed;
+            document.getElementById('ui-ref-link').value = `https://${window.location.hostname}/?ref=${uid}`;
+
+            const btn = document.getElementById('ui-mine-btn');
+            const timer = document.getElementById('ui-timer');
+            const now = Date.now();
+            if(now < uData.miningEnd) {
+                btn.innerText = "MINING..."; btn.classList.add('active');
+                const diff = uData.miningEnd - now;
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                timer.innerText = `Active: ${h}h ${m}m left`;
+            } else {
+                btn.innerText = "START"; btn.classList.remove('active');
+                timer.innerText = "System Standby";
+            }
+        }
+
+        // --- MARKET ---
+        function initMarket() {
+            onSnapshot(doc(db, "settings", "market"), d => {
+                if(d.exists()) {
+                    livePrice = d.data().currentPrice || 0.01;
+                    document.getElementById('ui-price').innerText = livePrice;
+                    drawChart();
+                }
+            });
+        }
+
+        function drawChart() {
+            const ctx = document.getElementById('marketChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['-4h', '-3h', '-2h', '-1h', 'Now'],
+                    datasets: [{ data: [livePrice*0.85, livePrice*1.05, livePrice*0.9, livePrice*1.1, livePrice], borderColor: '#a044ff', tension: 0.4, fill: false }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { x: { display: false } } }
+            });
+        }
+
+        window.openTab = (id, btn) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+        };
+
+        window.navToWallet = (id, btn) => { openTab(id, btn); };
+        window.copyRef = () => { document.getElementById('ui-ref-link').select(); document.execCommand('copy'); alert("Link Copied!"); };
+        window.processPurchase = (eur, boost) => { 
+            const wall = "UQA6wHjAHCQAwpFpT7fqnPDTljCSW3Q949qt8xGpGjTkgk3W";
+            alert(`Transfer ${eur}€ to:\n${wall}\n\nBoost will be added after review.`);
+            window.location.href = `https://app.tonkeeper.com/transfer/${wall}`;
+        };
+
+    </script>
+</body>
+</html>
